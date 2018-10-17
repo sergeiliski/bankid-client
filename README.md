@@ -45,7 +45,7 @@ bankid.connect(personalNumber)
 ### 3) Authenticate
 
 ```js
-bankid.Authenticate()
+bankid.authenticate()
 .then(function(response) {
   // Authentication process has started.
 });
@@ -64,7 +64,7 @@ var options = {
   userVisibleData: Buffer.from('show_this').toString('base64'),
   userNonVisibleData: Buffer.from('sign_this').toString('base64')
 };
-bankid.Sign(options)
+bankid.sign(options)
 .then(function(response) {
   // Signing process has started.
 });

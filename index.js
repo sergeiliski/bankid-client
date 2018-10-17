@@ -10,9 +10,7 @@ class BankID {
       throw new Error('Must include options.');
     }
     this.client = null;
-    this.authRef = null;
     this.id = null;
-    this.client = null;
     this.options = options;
   }
 
@@ -25,7 +23,7 @@ class BankID {
         cert: fs.readFileSync(this.options.cert),
         key: fs.readFileSync(this.options.key),
         passphrase: this.options.passphrase,
-        strictSSL: this.options.strictSSL ? this.options.strictSSL : false
+        strictSSL: false
       }
     }
     return new Promise((resolve, reject) => {
@@ -39,7 +37,7 @@ class BankID {
             this.options.key,
             this.options.cert,
             {
-              strictSSL: this.options.strictSSL ? this.options.strictSSL : false,
+              strictSSL: false,
               passphrase: this.options.passphrase
             }
           ))
