@@ -1,6 +1,6 @@
 {
   "name": "bankid-client",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Client to interact with BankID services.",
   "main": "index.js",
   "scripts": {
@@ -29,4 +29,3 @@
     "nyc": "^13.0.1"
   }
 }
-
