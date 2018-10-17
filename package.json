@@ -4,7 +4,7 @@
   "description": "Client to interact with BankID services.",
   "main": "index.js",
   "scripts": {
-    "test": "nyc --reporter=html --reporter=text ./node_modules/mocha/bin/mocha",
+    "test": "nyc --reporter=html --reporter=text ./node_modules/mocha/bin/mocha --timeout 5000",
     "coverage": "nyc report --reporter=text-lcov | coveralls"
   },
   "keywords": [
