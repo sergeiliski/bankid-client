@@ -29,9 +29,9 @@ class BankID {
       }
     }
     return new Promise((resolve, reject) => {
-      soap.createClient(this.options.url, options, (err, client) => {
+      return soap.createClient(this.options.url, options, (err, client) => {
         if (err) {
-          reject(Error(err))
+          return reject(new Error(err))
         } else {
           this.id = personalNumber
           this.client = client
@@ -43,7 +43,7 @@ class BankID {
               passphrase: this.options.passphrase
             }
           ))
-          resolve(client)
+          return resolve(client)
         }
       })
     })
@@ -52,12 +52,12 @@ class BankID {
   authenticate() {
     let args = { personalNumber: this.id };
     return new Promise((resolve, reject) => {
-      this.client.Authenticate(args, (err, result) => {
+      return this.client.Authenticate(args, (err, result) => {
         if (err) {
           const parser = new xml2js.Parser();
           parser.parseString(err.body, function(err, result) {
             if (err) {
-              reject(new Error(err));
+              return reject(new Error(err));
             }
             if (
               result &&
@@ -69,14 +69,14 @@ class BankID {
               result['soap:Envelope']['soap:Body'][0]['soap:Fault'][0]['faultstring'] &&
               result['soap:Envelope']['soap:Body'][0]['soap:Fault'][0]['faultstring'][0]
             ) {
-              resolve({
+              return resolve({
                 error: result['soap:Envelope']['soap:Body'][0]['soap:Fault'][0]['faultstring'][0]
               });
             }
-            reject(new Error(err));
           })
+          return reject(new Error(err));
         } else {
-          resolve({
+          return resolve({
             orderRef: result.orderRef,
             autoStartToken: result.autoStartToken
           });
@@ -88,12 +88,12 @@ class BankID {
   cancelAuthenticate() {
     const args = { personalNumber: this.id };
     return new Promise((resolve, reject) => {
-      this.client.Authenticate(args, (err, result) => {
+      return this.client.Authenticate(args, (err, result) => {
         if (err) {
           const parser = new xml2js.Parser();
           parser.parseString(err.body, function(err, result) {
             if (err) {
-              reject(new Error(err));
+              return reject(new Error(err));
             }
             if (
               result &&
@@ -105,12 +105,12 @@ class BankID {
               result['soap:Envelope']['soap:Body'][0]['soap:Fault'][0]['faultstring'] &&
               result['soap:Envelope']['soap:Body'][0]['soap:Fault'][0]['faultstring'][0] === 'ALREADY_IN_PROGRESS'
             ) {
-              resolve('AUTH_CANCELLED')
+              return resolve('AUTH_CANCELLED')
             }
           })
-          reject(new Error(err));
+          return reject(new Error(err));
         } else {
-          this.cancelAuthenticate()
+          return resolve(this.cancelAuthenticate());
         }
       })
     })
@@ -118,12 +118,12 @@ class BankID {
 
   collect(orderRef) {
     return new Promise((resolve, reject) => {
-      this.client.Collect(orderRef, (err, result) => {
+      return this.client.Collect(orderRef, (err, result) => {
         if (err) {
           const parser = new xml2js.Parser();
           parser.parseString(err.body, function(err, result) {
             if (err) {
-              reject(new Error(err));
+              return reject(new Error(err));
             }
             if (
               result &&
@@ -135,12 +135,12 @@ class BankID {
               result['soap:Envelope']['soap:Body'][0]['soap:Fault'][0]['faultstring'] &&
               result['soap:Envelope']['soap:Body'][0]['soap:Fault'][0]['faultstring'][0]
             ) {
-              resolve(result['soap:Envelope']['soap:Body'][0]['soap:Fault'][0]['faultstring'][0]);
+              return resolve(result['soap:Envelope']['soap:Body'][0]['soap:Fault'][0]['faultstring'][0]);
             }
           })
-          reject(Error(err));
+          return reject(new Error(err));
         } else {
-          resolve(result);
+          return resolve(result);
         }
       })
     })
@@ -153,12 +153,12 @@ class BankID {
       userNonVisibleData: data.userNonVisibleData
     };
     return new Promise((resolve, reject) => {
-      this.client.Sign(args, (err, result) => {
+      return this.client.Sign(args, (err, result) => {
         if (err) {
           const parser = new xml2js.Parser()
           parser.parseString(err.body, function(err, result) {
             if (err) {
-              reject(new Error(err));
+              return reject(new Error(err));
             }
             if (
               result &&
@@ -170,14 +170,14 @@ class BankID {
               result['soap:Envelope']['soap:Body'][0]['soap:Fault'][0]['faultstring'] &&
               result['soap:Envelope']['soap:Body'][0]['soap:Fault'][0]['faultstring'][0]
             ) {
-              resolve({
+              return resolve({
                 error: result['soap:Envelope']['soap:Body'][0]['soap:Fault'][0]['faultstring'][0]
               });
             }
           })
-          reject(new Error(err));
+          return reject(new Error(err));
         } else {
-          resolve({
+          return resolve({
             orderRef: result.orderRef,
             autoStartToken: result.autoStartToken
           });
@@ -193,12 +193,12 @@ class BankID {
       userNonVisibleData: Buffer.from('Cancel').toString('base64')
     };
     return new Promise((resolve, reject) => {
-      this.client.Sign(args, (err, result) => {
+      return this.client.Sign(args, (err, result) => {
         if (err) {
           const parser = new xml2js.Parser()
           parser.parseString(err.body, function(err, result) {
             if (err) {
-              reject(new Error(err));
+              return reject(new Error(err));
             }
             if (
               result &&
@@ -210,12 +210,12 @@ class BankID {
               result['soap:Envelope']['soap:Body'][0]['soap:Fault'][0]['faultstring'] &&
               result['soap:Envelope']['soap:Body'][0]['soap:Fault'][0]['faultstring'][0] === 'ALREADY_IN_PROGRESS'
             ) {
-              resolve('SIGN_CANCELLED');
+              return resolve('SIGN_CANCELLED');
             }
           })
-          reject(new Error(err));
+          return reject(new Error(err));
         } else {
-          this.cancelSign()
+          return resolve(this.cancelSign());
         }
       })
     })
