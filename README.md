@@ -84,11 +84,9 @@ bankid.collect(orderRef)
 });
 
 // Example response.
-// https://www.bankid.com/assets/bankid/rp/bankid-relying-party-guidelines-v3.2.1.pdf
+// https://www.bankid.com/assets/bankid/rp/bankid-relying-party-guidelines-v2.16.pdf
 {
- orderRef: '16e3f0bc-45f6-4b34-b596-0ff7379aac43',
- status: 'pending',
- hintCode: 'userSign'
+ progressStatus: 'USER_SIGN'
 }
 ```
 
