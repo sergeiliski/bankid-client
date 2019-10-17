@@ -116,6 +116,10 @@ class BankID {
 
   collect(orderRef) {
     return new Promise((resolve, reject) => {
+      if (!orderRef || typeof orderRef !== 'string') {
+        return reject('orderRef is required in a string format.');
+      }
+
       return this.client.Collect(orderRef, (err, result) => {
         if (err) {
           const parser = new xml2js.Parser();
@@ -145,12 +149,21 @@ class BankID {
   }
 
   sign(data) {
-    const args = {
-      personalNumber: this.id,
-      userVisibleData: data.userVisibleData,
-      userNonVisibleData: data.userNonVisibleData
-    };
     return new Promise((resolve, reject) => {
+      if (!data || typeof data !== 'object') {
+        return reject('Signable data is required.');
+      }
+  
+      if (!data.userNonVisibleData || !data.userNonVisibleData) {
+        return reject('Both userNonVisibleData and userVisibleData is required.');
+      }
+  
+      const args = {
+        personalNumber: this.id,
+        userVisibleData: data.userVisibleData,
+        userNonVisibleData: data.userNonVisibleData
+      };
+
       return this.client.Sign(args, (err, result) => {
         if (err) {
           const parser = new xml2js.Parser()
