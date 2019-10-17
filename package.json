@@ -4,7 +4,7 @@
   "description": "Client to interact with BankID services.",
   "main": "index.js",
   "scripts": {
-    "test": "nyc --reporter=html --reporter=text ./node_modules/mocha/bin/mocha --timeout 5000",
+    "test": "nyc --reporter=html --reporter=text --x config.js --x test.js ./node_modules/mocha/bin/mocha --timeout 5000",
     "coverage": "nyc report --reporter=text-lcov | coveralls"
   },
   "keywords": [
@@ -18,7 +18,7 @@
   "homepage": "https://github.com/sergeiliski/bankid-client",
   "license": "MIT",
   "dependencies": {
-    "soap": "^0.25.0",
+    "soap": "^0.30.0",
     "xml2js": "^0.4.19"
   },
   "devDependencies": {
