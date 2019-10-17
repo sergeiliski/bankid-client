@@ -35,7 +35,7 @@ describe('Connection', function() {
     return bankid.connect('198605082695')
     .then(function(connection) {
       assert(connection instanceof soap.Client);
-    });
+    })
   });
 });
 
@@ -63,17 +63,10 @@ describe('Authenticate', function() {
         assert.equal(response, 'AUTH_CANCELLED');
       })
   });
-
-  it('Handle cancelAuthenticate if called when nothing to cancel', function() {
-    return bankid.cancelAuthenticate()
-      .then(function(response) {
-        assert.equal(response, 'AUTH_CANCELLED');
-      })
-  });
 });
 
 describe('Sign', function() {
-  let bankid;
+  let bankid, orderRef;
   beforeEach(function(done) {
     bankid = new BankID(config);
     bankid.connect('198605082694')
@@ -82,14 +75,36 @@ describe('Sign', function() {
     });
   });
 
+  it('Sign requires data object', function() {
+    return assert.isRejected(bankid.sign(), 'Signable data is required.');
+  });
+
+  it('Sign requires both non and visible data', function() {
+    return assert.isRejected(bankid.sign({
+      userVisibleData: 'test'
+    }), 'Both userNonVisibleData and userVisibleData is required.');
+  });
+
   it('Sign returns object with orderRef and autoStartToken', function() {
     return bankid.sign({
       userVisibleData: Buffer.from('test').toString('base64'),
       userNonVisibleData: Buffer.from('test').toString('base64')
     })
-      .then(function(connection) {
-        assert.exists(connection.orderRef);
-        assert.exists(connection.autoStartToken);
+      .then(function(response) {
+        assert.exists(response.orderRef);
+        assert.exists(response.autoStartToken);
+        orderRef = response.orderRef;
+      })
+  });
+
+  it('Collect requires orderRef', function() {
+    return assert.isRejected(bankid.collect(), 'orderRef is required in a string format.');
+  });
+
+  it('Collects signing process correctly', function() {
+    return bankid.collect(orderRef)
+      .then(function(response) {
+        assert.exists(response.progressStatus);
       })
   });
 
@@ -99,12 +114,29 @@ describe('Sign', function() {
         assert.equal(response, 'SIGN_CANCELLED');
       })
   });
+});
 
+describe('Cancel', function() {
   it('Handle cancelSign if called when nothing to cancel', function() {
-    return bankid.cancelSign()
+    const bankid = new BankID(config);
+    bankid.connect('198605082692')
+    .then(function() {
+      return bankid.cancelSign()
       .then(function(response) {
         assert.equal(response, 'SIGN_CANCELLED');
       })
+    });
+  });
+
+  it('Handle cancelAuthenticate if called when nothing to cancel', function() {
+    const bankid = new BankID(config);
+    bankid.connect('198605082691')
+    .then(function() {
+      return bankid.cancelAuthenticate()
+      .then(function(response) {
+        assert.equal(response, 'AUTH_CANCELLED');
+      })
+    });
   });
 });
 
