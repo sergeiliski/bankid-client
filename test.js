@@ -47,7 +47,19 @@ describe('Authenticate', function() {
   it('Auth rejects if no mandatory options', async function() {
     await assertThrowsAsync(async () => {
       return await bankid.auth({})
-    }, 'Both user ip and personal number are required')
+    }, 'User ip address is required')
+  })
+
+  it('Auth returns object with orderRef and autoStartToken without personal number', async function() {
+    const response = await bankid.auth({
+      endUserIp: '194.168.2.25'
+    })
+    assert.equal(response.status, 200)
+    assert.exists(response.data.orderRef)
+    assert.exists(response.data.autoStartToken)
+
+    const res = await bankid.cancel(response.data.orderRef)
+    assert.equal(res.status, 200)
   })
 
   it('Auth returns object with orderRef and autoStartToken', async function() {

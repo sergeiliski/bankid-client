@@ -26,13 +26,16 @@ class BankID {
   }
 
   auth(data) {
-    if (!data.endUserIp || !data.personalNumber) {
-      throw Error('Both user ip and personal number are required')
+    if (!data.endUserIp) {
+      throw Error('User ip address is required')
     }
 
     const params = {
-      endUserIp: data.endUserIp,
-      personalNumber: data.personalNumber
+      endUserIp: data.endUserIp
+    }
+
+    if (data.personalNumber) {
+      params.personalNumber = data.personalNumber;
     }
 
     return this.axios.post(this.baseUrl.concat(this.authUrl), params)
