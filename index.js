@@ -25,7 +25,7 @@ class BankID {
     this.cancelUrl = 'cancel'
   }
 
-  async auth(data) {
+  auth(data) {
     if (!data.endUserIp || !data.personalNumber) {
       throw Error('Both user ip and personal number are required')
     }
@@ -35,10 +35,10 @@ class BankID {
       personalNumber: data.personalNumber
     }
 
-    return await this.axios.post(this.baseUrl.concat(this.authUrl), params)
+    return this.axios.post(this.baseUrl.concat(this.authUrl), params)
   }
 
-  async sign(data) {
+  sign(data) {
     if (!data.endUserIp || !data.personalNumber || !data.userVisibleData) {
       throw Error('User ip, personal number and visible data are required')
     }
@@ -53,27 +53,27 @@ class BankID {
       params = Object.assign({}, params, { userNonVisibleData: data.userNonVisibleData })
     }
 
-    return await this.axios.post(this.baseUrl.concat(this.signUrl), params)
+    return this.axios.post(this.baseUrl.concat(this.signUrl), params)
   }
 
-  async collect(orderRef) {
+  collect(orderRef) {
     if (!orderRef) {
       throw Error('Order reference value is required')
     }
     const params = {
       orderRef
     }
-    return await this.axios.post(this.baseUrl.concat(this.collectUrl), params)
+    return this.axios.post(this.baseUrl.concat(this.collectUrl), params)
   }
 
-  async cancel(orderRef) {
+  cancel(orderRef) {
     if (!orderRef) {
       throw Error('Order reference value is required')
     }
     const params = {
       orderRef
     }
-    return await this.axios.post(this.baseUrl.concat(this.cancelUrl), params)
+    return this.axios.post(this.baseUrl.concat(this.cancelUrl), params)
   }
 
   _createAxiosInstance() {
