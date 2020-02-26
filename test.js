@@ -116,7 +116,7 @@ describe('Sign', function() {
   it('Sign rejects if no mandatory options', async function() {
     await assertThrowsAsync(async () => {
       return await bankid.sign({})
-    }, 'User ip, personal number and visible data are required')
+    }, 'User ip and visible data are required')
   })
 
   it('Sign returns object with orderRef and autoStartToken', async function() {

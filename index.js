@@ -42,8 +42,8 @@ class BankID {
   }
 
   sign(data) {
-    if (!data.endUserIp || !data.personalNumber || !data.userVisibleData) {
-      throw Error('User ip, personal number and visible data are required')
+    if (!data.endUserIp || !data.userVisibleData) {
+      throw Error('User ip and visible data are required')
     }
 
     let params = {
