@@ -1,142 +1,153 @@
-const BankID = require('./');
-const chai = require("chai");
-const chaiAsPromised = require("chai-as-promised");
-const soap = require('soap')
-chai.use(chaiAsPromised);
-const assert = chai.assert;
+const BankID = require('./index')
+const chai = require("chai")
+const chaiAsPromised = require("chai-as-promised")
+chai.use(chaiAsPromised)
+const assert = chai.assert
 const config = require('./config.js')
+
+async function assertThrowsAsync(fn, message) {
+  let f = () => {};
+  try {
+    await fn();
+  } catch(e) {
+    f = () => { throw e };
+  } finally {
+    assert.throws(f, message);
+  }
+}
 
 describe('Initiate client', function() {
   it('Throws exception if no options', function() {
     return assert.throws(function() {
-      return new BankID();
-    }, 'Must include options.');
-  });
+      return new BankID()
+    }, 'Must include options')
+  })
 
-  it('Loads bankid client', function() {
-    return assert(new BankID(config) instanceof BankID);
-  });
-});
-
-describe('Connection', function() {
-  let bankid;
-  beforeEach(function(done) {
-    bankid = new BankID(config);
-    done();
-  });
-
-  it('Throws exception if no personal number', function() {
+  it('Throws exception if no pfx or passphrase in options', function() {
     return assert.throws(function() {
-      return bankid.connect();
-    }, 'Must contain personal number.');
-  });
+      return new BankID({})
+    }, 'Certificate and passphrase are required')
+  })
 
-  it('Connection is established', function() {
-    return bankid.connect('198605082695')
-    .then(function(connection) {
-      assert(connection instanceof soap.Client);
-    })
-  });
-});
+  it('Sets url correctly', function() {
+    const conf = { ...config }
+    conf.baseUrl  = conf.baseUrl.slice(0, -1)
+    const bankid = new BankID(conf)
+    assert.equal(bankid.baseUrl, config.baseUrl)
+  })
+})
 
 describe('Authenticate', function() {
-  let bankid;
+  let bankid
   beforeEach(function(done) {
-    bankid = new BankID(config);
-    bankid.connect('198605082695')
-    .then(function() {
-      done();
-    });
-  });
+    bankid = new BankID(config)
+    done()
+  })
 
-  it('Authenticate returns object with orderRef and autoStartToken', function() {
-    return bankid.authenticate()
-      .then(function(connection) {
-        assert.exists(connection.orderRef);
-        assert.exists(connection.autoStartToken);
-      })
-  });
+  it('Auth rejects if no mandatory options', async function() {
+    await assertThrowsAsync(async () => {
+      return await bankid.auth({})
+    }, 'Both user ip and personal number are required')
+  })
 
-  it('cancelAuthenticate cancels the authentications process', function() {
-    return bankid.cancelAuthenticate()
-      .then(function(response) {
-        assert.equal(response, 'AUTH_CANCELLED');
-      })
-  });
-});
+  it('Auth returns object with orderRef and autoStartToken', async function() {
+    const response = await bankid.auth({
+      endUserIp: '194.168.2.25',
+      personalNumber: '190000000000'
+    })
+    assert.equal(response.status, 200)
+    assert.exists(response.data.orderRef)
+    assert.exists(response.data.autoStartToken)
+
+    const res = await bankid.cancel(response.data.orderRef)
+    assert.equal(res.status, 200)
+  })
+})
+
+describe('Collect', function() {
+  let bankid
+  beforeEach(function(done) {
+    bankid = new BankID(config)
+    done()
+  })
+
+  it('Collect rejects if no orderRef', async function() {
+    await assertThrowsAsync(async () => {
+      return await bankid.collect()
+    }, 'Order reference value is required')
+  })
+
+  it('Collect returns status', async function() {
+    const response = await bankid.auth({
+      endUserIp: '194.168.2.25',
+      personalNumber: '190000000000'
+    })
+    
+    const res = await bankid.collect(response.data.orderRef)
+
+    assert.equal(res.status, 200)
+    assert.exists(res.data.orderRef)
+    assert.exists(res.data.status)
+    assert.exists(res.data.hintCode)
+
+    await bankid.cancel(response.data.orderRef)
+  })
+})
 
 describe('Sign', function() {
-  let bankid, orderRef;
+  let bankid
   beforeEach(function(done) {
-    bankid = new BankID(config);
-    bankid.connect('198605082694')
-    .then(function() {
-      done();
-    });
-  });
+    bankid = new BankID(config)
+    done()
+  })
 
-  it('Sign requires data object', function() {
-    return assert.isRejected(bankid.sign(), 'Signable data is required.');
-  });
+  it('Sign rejects if no mandatory options', async function() {
+    await assertThrowsAsync(async () => {
+      return await bankid.sign({})
+    }, 'User ip, personal number and visible data are required')
+  })
 
-  it('Sign requires both non and visible data', function() {
-    return assert.isRejected(bankid.sign({
-      userVisibleData: 'test'
-    }), 'Both userNonVisibleData and userVisibleData is required.');
-  });
-
-  it('Sign returns object with orderRef and autoStartToken', function() {
-    return bankid.sign({
-      userVisibleData: Buffer.from('test').toString('base64'),
-      userNonVisibleData: Buffer.from('test').toString('base64')
+  it('Sign returns object with orderRef and autoStartToken', async function() {
+    const response = await bankid.sign({
+      endUserIp: '194.168.2.25',
+      personalNumber: '190000000000',
+      userVisibleData: Buffer.from('xxxxxxxxxxx').toString('base64')
     })
-      .then(function(response) {
-        assert.exists(response.orderRef);
-        assert.exists(response.autoStartToken);
-        orderRef = response.orderRef;
-      })
-  });
+    assert.equal(response.status, 200)
+    assert.exists(response.data.orderRef)
+    assert.exists(response.data.autoStartToken)
 
-  it('Collect requires orderRef', function() {
-    return assert.isRejected(bankid.collect(), 'orderRef is required in a string format.');
-  });
+    const res = await bankid.cancel(response.data.orderRef)
+    assert.equal(res.status, 200)
+  })
 
-  it('Collects signing process correctly', function() {
-    return bankid.collect(orderRef)
-      .then(function(response) {
-        assert.exists(response.progressStatus);
-      })
-  });
+  it('Sign with userNonVisibleData returns object with orderRef and autoStartToken', async function() {
+    const response = await bankid.sign({
+      endUserIp: '194.168.2.25',
+      personalNumber: '190000000000',
+      userVisibleData: Buffer.from('xxxxxxxxxxx').toString('base64'),
+      userNonVisibleData: Buffer.from('xxxxxxxxxxx').toString('base64')
+    })
+    assert.equal(response.status, 200)
+    assert.exists(response.data.orderRef)
+    assert.exists(response.data.autoStartToken)
 
-  it('cancelSign cancels the authentications process', function() {
-    return bankid.cancelSign()
-      .then(function(response) {
-        assert.equal(response, 'SIGN_CANCELLED');
-      })
-  });
-});
+    const res = await bankid.cancel(response.data.orderRef)
+    assert.equal(res.status, 200)
+  })
+})
 
 describe('Cancel', function() {
-  it('Handle cancelSign if called when nothing to cancel', function() {
-    const bankid = new BankID(config);
-    bankid.connect('198605082692')
-    .then(function() {
-      return bankid.cancelSign()
-      .then(function(response) {
-        assert.equal(response, 'SIGN_CANCELLED');
-      })
-    });
-  });
+  let bankid
+  beforeEach(function(done) {
+    bankid = new BankID(config)
+    done()
+  })
 
-  it('Handle cancelAuthenticate if called when nothing to cancel', function() {
-    const bankid = new BankID(config);
-    bankid.connect('198605082691')
-    .then(function() {
-      return bankid.cancelAuthenticate()
-      .then(function(response) {
-        assert.equal(response, 'AUTH_CANCELLED');
-      })
-    });
-  });
-});
+  it('Cancel rejects if no orderRef', async function() {
+    await assertThrowsAsync(async () => {
+      return await bankid.cancel()
+    }, 'Order reference value is required')
+  })
+})
 
