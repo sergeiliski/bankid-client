@@ -10,9 +10,7 @@ class BankID {
     if (!connectionOptions) {
       throw Error('Must include options')
     }
-    this.options = {
-      ...connectionOptions
-    }
+    this.options = Object.assign({}, connectionOptions)
     if (!this.options.pfx || !this.options.passphrase) {
       throw Error('Certificate and passphrase are required')
     }
@@ -52,7 +50,7 @@ class BankID {
     }
 
     if (data.userNonVisibleData) {
-      params = { ...params, ... { userNonVisibleData: data.userNonVisibleData }}
+      params = Object.assign({}, params, { userNonVisibleData: data.userNonVisibleData })
     }
 
     return await this.axios.post(this.baseUrl.concat(this.signUrl), params)
